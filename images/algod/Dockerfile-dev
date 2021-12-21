@@ -1,14 +1,14 @@
 ARG GO_VERSION=1.17.5
 FROM golang:$GO_VERSION
 
-ARG CHANNEL=stable
+ENV CHANNEL=stable
 
 # Options for algod config
 ARG ALGOD_PORT="4001"
 ARG KMD_PORT="4002"
 ARG TOKEN="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 ARG CDT_PORT="9392"
-ARG TEMPLATE="images/algod/template.json"
+ARG TEMPLATE="images/algod/DevModeNetwork.json"
 
 RUN echo "Installing from source. ${URL} -- ${BRANCH}"
 ENV BIN_DIR="$HOME/node"

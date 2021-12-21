@@ -14,11 +14,7 @@ import os
 import pprint
 import shutil
 import subprocess
-import tarfile
-import time
-import json
-import urllib.request
-from os.path import expanduser, join
+from os.path import join
 
 from typing import List
 
@@ -43,24 +39,24 @@ def algod_directories(network_dir):
     """
     Compute data/kmd directories.
     """
-    data_dir=join(network_dir, 'Node')
+    data_dir = join(network_dir, 'Node')
 
     kmd_dir = None
     options = [filename for filename in os.listdir(data_dir) if filename.startswith('kmd')]
 
     # When setting up the real network the kmd dir doesn't exist yet because algod hasn't been started.
     if len(options) == 0:
-        kmd_dir=join(data_dir, 'kmd-v0.5')
+        kmd_dir = join(data_dir, 'kmd-v0.5')
         os.mkdir(kmd_dir)
     else:
-        kmd_dir=join(data_dir, options[0])
+        kmd_dir = join(data_dir, options[0])
 
     return data_dir, kmd_dir
 
 
 def create_real_network(bin_dir, network_dir, template, genesis_file) -> List[str]:
-    data_dir_src=join(bin_dir, 'data')
-    target=join(network_dir, 'Node')
+    data_dir_src = join(bin_dir, 'data')
+    target = join(network_dir, 'Node')
 
     # Reset in case it exists
     if os.path.exists(target):
@@ -76,7 +72,7 @@ def create_real_network(bin_dir, network_dir, template, genesis_file) -> List[st
             '%s/kmd start -t 0 -d %s' % (bin_dir, kmd_dir)]
 
 
-def create_private_network(bin_dir, network_dir, template) -> List[str]:
+def create_private_network(bin_dir, network_dir, template, genesis_file = None) -> List[str]:
     """
     Create a private network.
     """
@@ -85,7 +81,8 @@ def create_private_network(bin_dir, network_dir, template) -> List[str]:
         shutil.rmtree(args.network_dir)
 
     # Use goal to create the private network.
-    subprocess.check_call(['%s/goal network create -n sandnet -r %s -t %s' % (bin_dir, network_dir, template)], shell=True)
+    subprocess.check_call(['%s/goal network create -n sandnet -r %s -t %s' % (bin_dir, network_dir, template)],
+                          shell=True)
 
     data_dir, kmd_dir = algod_directories(network_dir)
     return ['%s/goal network start -r %s' % (bin_dir, network_dir),
@@ -103,7 +100,9 @@ def configure_data_dir(network_dir, token, algod_port, kmd_port, bootstrap_url):
 
     # Setup config, inject port
     with open(join(node_dir, 'config.json'), 'w') as f:
-        f.write('{ "Version": 12, "GossipFanout": 1, "EndpointAddress": "0.0.0.0:%s", "DNSBootstrapID": "%s", "IncomingConnectionsLimit": 0, "Archival":false, "isIndexerActive":false, "EnableDeveloperAPI":true}' % (algod_port, bootstrap_url))
+        f.write(
+            '{ "Version": 12, "GossipFanout": 1, "EndpointAddress": "0.0.0.0:%s", "DNSBootstrapID": "%s", "IncomingConnectionsLimit": 0, "Archival":false, "isIndexerActive":false, "EnableDeveloperAPI":true}' % (
+                algod_port, bootstrap_url))
     with open(join(kmd_dir, 'kmd_config.json'), 'w') as f:
         f.write('{  "address":"0.0.0.0:%s",  "allowed_origins":["*"]}' % kmd_port)
 
@@ -114,15 +113,9 @@ if __name__ == '__main__':
     print('Configuring network with the following arguments:')
     pp.pprint(vars(args))
 
-
-    # Setup network
-    privateNetworkMode = args.genesis_file == None or args.genesis_file == '' or os.path.isdir(args.genesis_file)
-    if privateNetworkMode:
-        print('Creating a private network.')
-        startCommands = create_private_network(args.bin_dir, args.network_dir, args.network_template)
-    else:
-        print('Setting up real retwork.')
-        startCommands = create_real_network(args.bin_dir, args.network_dir, args.network_template, args.genesis_file)
+    # In Conio we always want to create a private network
+    print('Creating a private network with random accounts.')
+    startCommands = create_private_network(args.bin_dir, args.network_dir, args.network_template)
 
     # Write start script
     print(f'Start commands for {args.start_script}:')
@@ -141,4 +134,3 @@ if __name__ == '__main__':
 
     # Configure network
     configure_data_dir(args.network_dir, args.network_token, args.algod_port, args.kmd_port, args.bootstrap_url)
-

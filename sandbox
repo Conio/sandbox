@@ -208,22 +208,6 @@ sandbox () {
     dc exec algod goal "$@"
   }
 
-  tealdbg_helper () {
-    if [[ "$*" == *--listen* ]]
-    then
-        dc exec algod tealdbg "$@"
-    else
-      if [[ "$*" == *debug* ]]
-      then
-          echo "tealdbg debug command called without --listen option therefore sandbox attached the option automatically!"
-          dc exec algod tealdbg  "$@" --listen 0.0.0.0
-          
-      else
-          dc exec algod tealdbg "$@"
-      fi        
-    fi    
-  }
-
   version_helper () {
     statusline "algod version"
     dc exec algod goal -v
@@ -233,86 +217,6 @@ sandbox () {
     dc exec indexer-db postgres -V
   }
 
-  # Given a network name attempts to fetch a catchpoint and catchup.
-  perform_fast_catchup () {
-    goal_helper node catchup "$1"
-
-    if [ $? -ne 0 ]; then
-      err "There was a problem starting fast catchup."
-    fi
-
-    # Newline for the progress bar to use.
-    echo ""
-    DONE=false
-    STARTED=false
-    while [ $DONE == "false" ]; do
-      sleep 0.1
-
-      local RES
-      local TOTAL
-      local PROGRESS
-
-      RES="$(status_helper)"
-      TOTAL=1000
-      PROGRESS=0
-
-      # If progress has been made, update the progress.
-      if [[ "$RES" == *"Catchpoint total accounts"* ]]; then
-        STARTED=true
-        TOTAL=$(echo $RES | grep -o 'Catchpoint total accounts: [[:digit:]]*' | cut -d':' -f 2 )
-        PROGRESS=$(echo $RES | grep -o 'Catchpoint accounts processed: [[:digit:]]*' | cut -d':' -f 2 )
-      elif [ $STARTED == "true" ]; then
-        DONE=true
-        PROGRESS=$TOTAL
-      fi
-
-      if [ $TOTAL == $PROGRESS ]; then
-        DONE=true
-      else
-        progress_bar "Processing accounts:" "$PROGRESS" "$TOTAL"
-      fi
-    done
-
-    overwrite "* Account processing complete."
-
-    # Newline for the progress bar to use.
-    echo ""
-
-    DONE=false
-    STARTED=false
-    while [ $DONE == "false" ]; do
-      sleep 0.1
-
-      local RES
-      local TOTAL
-      local PROGRESS
-
-      RES="$(status_helper)"
-      TOTAL=1000
-      PROGRESS=0
-
-      # If progress has been made, update the progress.
-      if [[ "$RES" == *"Catchpoint downloaded blocks"* ]]; then
-        STARTED=true
-        TOTAL=$(echo $RES | grep -o 'Catchpoint total blocks: [[:digit:]]*' | cut -d ':' -f 2 )
-        PROGRESS=$(echo $RES | grep -o 'Catchpoint downloaded blocks: [[:digit:]]*' | cut -d ':' -f 2 )
-      elif [ $STARTED == "true" ]; then
-        DONE=true
-        PROGRESS=$TOTAL
-      fi
-
-      if [ $TOTAL == $PROGRESS ]; then
-        DONE=true
-      else
-        progress_bar "Downloading blocks:" "$PROGRESS" "$TOTAL"
-      fi
-    done
-
-    # Clear progress bar line and print success text.
-    overwrite "* Blocks downloaded."
-
-    sleep 1
-  }
 
   clean () {
     echo "* docker-compose down"
@@ -327,51 +231,6 @@ sandbox () {
     echo 'clean function executed' > "$CLEAN_FILE";
   }
 
-  # Enter attaches users to a shell in the desired container
-  enter () {
-    CONTAINER=${2:-}
-    if [ -z "$CONTAINER" ]; then
-        err "'enter' requires a container. Available containers: algod, indexer, indexer-db"
-    fi
-    case $CONTAINER in
-      algod)
-        statusline "Entering /bin/bash session in the algod container..."
-        dc_pty exec algod //bin/bash
-        return
-        ;;
-      indexer)
-        statusline "Entering /bin/bash session in the indexer container..."
-        dc_pty exec indexer //bin/bash
-        return
-        ;;
-      indexer-db)
-        statusline "Entering /bin/bash session in the indexer-db container..."
-        dc_pty exec indexer-db //bin/bash
-        return
-        ;;
-    esac
-
-    err "Cannot enter '$CONTAINER'. Available containers: algod, indexer, indexer-db"
-  }
-
-
-  # Logs streams the logs from the container to the shell
-  logs () {
-    if [[ $# -gt 1 && $2 == "raw" ]]; then
-      dc exec algod tail -f node.log
-    else
-      dc exec algod carpenter -D
-    fi
-  }
-
-  set_catchpoint () {
-    # TODO: Might be useful to allow providing the catchpoint with '-c'
-    CATCHPOINT=$(curl -s ${FAST_CATCHUP_URL/CHANNEL/$1})
-    # If the catchpoint wasn't returned there is a multiline error.
-    if [[ "$(echo $CATCHPOINT | wc -l | tr -d ' ')" != "1" ]]; then
-      CATCHPOINT=""
-    fi
-  }
 
   # Start the algorand node
   up () {

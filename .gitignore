@@ -2,3 +2,5 @@
 .clean
 sandbox.log
 data
+venv
+.idea

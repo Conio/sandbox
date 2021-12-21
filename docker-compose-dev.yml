@@ -18,7 +18,7 @@ services:
       dockerfile: ./images/indexer/Dockerfile
       args:
         URL: "https://github.com/algorand/indexer"
-        BRANCH: "master"
+        BRANCH: "develop"
     ports:
       - 8980:8980
     restart: unless-stopped
