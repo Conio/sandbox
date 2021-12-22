@@ -42,7 +42,7 @@ RUN /tmp/images/algod/setup.py \
  --genesis-file "/tmp/${GENESIS_FILE}"
 
 ENV PATH="$BIN_DIR:${PATH}"
-WORKDIR /opt/data
+WORKDIR /opt
 
 # Start algod
 CMD ["/opt/start_algod.sh"]

@@ -4,32 +4,17 @@
         "Wallets": [
             {
                 "Name": "Wallet1",
-                "Stake": 5,
-                "Online": true
-            },
-            {
-                "Name": "Wallet2",
-                "Stake": 95,
+                "Stake": 100,
                 "Online": true
             }
         ]
     },
     "Nodes": [
         {
-            "Name": "Primary",
-            "IsRelay": true,
-            "Wallets": [
-                {
-                    "Name": "Wallet1",
-                    "ParticipationOnly": false
-                }
-            ]
-        },
-        {
             "Name": "Node",
             "Wallets": [
                 {
-                    "Name": "Wallet2",
+                    "Name": "Wallet1",
                     "ParticipationOnly": false
                 }
             ]

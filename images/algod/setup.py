@@ -128,9 +128,9 @@ if __name__ == '__main__':
     os.chmod(args.start_script, 0o755)
 
     # Create symlink
-    data_dir, _ = algod_directories(args.network_dir)
-    print(f'Creating symlink {args.data_dir} -> {data_dir}')
-    os.symlink(data_dir, args.data_dir)
+    # data_dir, _ = algod_directories(args.network_dir)
+    # print(f'Creating symlink {args.data_dir} -> {data_dir}')
+    # os.symlink(data_dir, args.data_dir)
 
     # Configure network
     configure_data_dir(args.network_dir, args.network_token, args.algod_port, args.kmd_port, args.bootstrap_url)
