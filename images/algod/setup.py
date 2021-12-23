@@ -72,7 +72,7 @@ def create_real_network(bin_dir, network_dir, template, genesis_file) -> List[st
             '%s/kmd start -t 0 -d %s' % (bin_dir, kmd_dir)]
 
 
-def create_private_network(bin_dir, network_dir, template, genesis_file = None) -> List[str]:
+def create_private_network(bin_dir, network_dir, template) -> List[str]:
     """
     Create a private network.
     """
@@ -83,6 +83,7 @@ def create_private_network(bin_dir, network_dir, template, genesis_file = None) 
     # Use goal to create the private network.
     subprocess.check_call(['%s/goal network create -n sandnet -r %s -t %s' % (bin_dir, network_dir, template)],
                           shell=True)
+    print('network_dir: %s, template: %s', network_dir, template)
 
     data_dir, kmd_dir = algod_directories(network_dir)
     return ['%s/goal network start -r %s' % (bin_dir, network_dir),
@@ -128,9 +129,9 @@ if __name__ == '__main__':
     os.chmod(args.start_script, 0o755)
 
     # Create symlink
-    # data_dir, _ = algod_directories(args.network_dir)
-    # print(f'Creating symlink {args.data_dir} -> {data_dir}')
-    # os.symlink(data_dir, args.data_dir)
+    data_dir, _ = algod_directories(args.network_dir)
+    print(f'Creating symlink {args.data_dir} -> {data_dir}')
+    os.symlink(data_dir, args.data_dir)
 
     # Configure network
     configure_data_dir(args.network_dir, args.network_token, args.algod_port, args.kmd_port, args.bootstrap_url)

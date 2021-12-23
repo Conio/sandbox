@@ -5,7 +5,7 @@ services:
     container_name: "algorand-sandbox-algod"
     build:
       context: .
-      dockerfile: ./images/algod/Dockerfile
+      dockerfile: images/algod/Dockerfile-old
     ports:
       - 4001:4001
       - 4002:4002
@@ -23,7 +23,7 @@ services:
       - 8980:8980
     restart: unless-stopped
     environment:
-      DISABLED: "${INDEXER_DISABLED}"
+      DISABLED: ""
       PORT: "8980"
       SNAPSHOT: ""
       CONNECTION_STRING: "host=indexer-db port=5432 user=algorand password=algorand dbname=indexer_db sslmode=disable"
